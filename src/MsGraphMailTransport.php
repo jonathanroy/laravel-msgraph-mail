@@ -9,6 +9,7 @@ use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Mail\Transport\Transport;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use LaravelMsGraphMail\Exceptions\CouldNotGetToken;
 use LaravelMsGraphMail\Exceptions\CouldNotReachService;
@@ -96,6 +97,8 @@ class MsGraphMailTransport extends Transport {
         $priority = $message->getPriority();
         $attachments = $message->getChildren();
 
+        Log::info(var_export($message->getContentType(), true));
+
         return array_filter([
             'subject' => $message->getSubject(),
             'sender' => $this->toRecipientCollection($from)[0],
@@ -106,7 +109,7 @@ class MsGraphMailTransport extends Transport {
             'bccRecipients' => $this->toRecipientCollection($message->getBcc()),
             'importance' => $priority === 3 ? 'Normal' : ($priority < 3 ? 'Low' : 'High'),
             'body' => [
-                'contentType' => Str::contains($message->getContentType(), 'html') ? 'html' : 'text',
+                'contentType' => Str::contains($message->getContentType(), 'text/plain') ? 'text' : 'html',
                 'content' => $message->getBody(),
             ],
             'attachments' => $this->toAttachmentCollection($attachments),
